@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en" class="overflow-x-hidden">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FBCA ONLINE EXAMINATION PORTAL</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+    // Suppress CDN warning in console
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+      originalWarn(...args);
+    };
+  </script>
+  <!-- Tailwind CSS & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Firebase Cloud SDKs -->
+   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e3a8a',
+              800: '#0f2347',
+              900: '#0a162e',
+              950: '#050c1b'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            heading: ['"Outfit"', '"Poppins"', 'sans-serif'],
+            orbitron: ['"Outfit"', '"Poppins"', 'sans-serif'],
+            cinzel: ['"Cinzel"', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="antialiased overflow-x-hidden w-full">
+
+  <!-- Interactive Toast Notification -->
+  <div id="toast" class="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-[9999] transform transition-all duration-300 translate-y-[-160%] opacity-0 bg-slate-900 text-white p-3.5 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
+    <div id="toast-icon-wrap" class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-base"></i>
+    </div>
+    <div class="flex-1 overflow-hidden">
+      <p id="toast-title" class="font-orbitron font-bold text-xs uppercase tracking-wider text-blue-400 truncate">Notification</p>
+      <p id="toast-msg" class="text-xs text-slate-200 font-medium mt-0.5 leading-snug">Action complete.</p>
+    </div>
+  </div>
+
+  <!-- Anti-Cheat Banner -->
+  <div id="anti-cheat-alert" class="fixed top-0 left-0 right-0 z-[9990] bg-rose-700 text-white px-3 py-2 text-center text-xs font-bold shadow-xl hidden flex items-center justify-center gap-2">
+    <i class="fa-solid fa-triangle-exclamation text-base animate-bounce text-amber-300"></i>
+    <span id="anti-cheat-text">WARNING: Tab switch detected! Cheating is prohibited.</span>
+    <button onclick="dismissAntiCheatBanner()" class="bg-rose-950 px-2.5 py-0.5 rounded text-[10px] uppercase font-bold hover:bg-black transition interactive-btn">Dismiss</button>
+  </div>
+
+  <!-- ENTRY READINESS MODAL -->
+  <div id="welcome-readiness-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-slate-200 animate-popIn relative">
+      <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto mb-3 text-blue-600 text-2xl shadow-inner">
+        <i class="fa-solid fa-laptop-code"></i>
+      </div>
+      <span class="text-[10px] font-orbitron font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 inline-block mb-1.5">
+        EXAMINATION PORTAL
+      </span>
+      <h2 class="font-orbitron font-black text-lg sm:text-xl text-slate-900 leading-tight">
+        Are you ready to begin your test?
+      </h2>
+      <p class="text-xs text-slate-600 font-medium mt-2 leading-relaxed">
+        Please make sure you have a stable internet connection and are ready to complete the test without interruption.
+      </p>
+      
+      <div class="mt-5 flex flex-col gap-2">
+        <button onclick="dismissWelcomeModal()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/25 interactive-btn flex items-center justify-center gap-2">
+          <span>I AM READY, PROCEED</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+        <button onclick="dismissWelcomeModal()" class="w-full py-2 text-xs text-slate-500 font-semibold hover:text-slate-800 transition interactive-btn">
+          I'll review instructions first
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXACT ORIGINAL TOPBAR HEADER (Screenshot Match) -->
+  <header class="bg-brand-950/95 backdrop-blur-md border-b border-brand-800 text-white sticky top-0 z-40 shadow-lg px-3 sm:px-8 py-2.5 sm:py-3.5 w-full">
+    <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-3 w-full">
+      
+      <!-- Left Branding -->
+      <div class="flex items-center gap-3 cursor-pointer w-full md:w-auto overflow-hidden" onclick="activateStudentPortal()">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 p-0.5 flex items-center justify-center shrink-0 shadow-md">
+          <div class="w-full h-full bg-brand-950 rounded-[14px] flex items-center justify-center overflow-hidden p-1">
+            <img id="header-inst-logo" src="logo.png" onerror="this.onerror=null; this.classList.add('hidden'); document.getElementById('header-inst-fallback').classList.remove('hidden');" alt="Logo" class="w-full h-full object-contain">
+            <i id="header-inst-fallback" class="fa-solid fa-graduation-cap text-cyan-400 text-lg hidden"></i>
+          </div>
+        </div>
+        <div class="overflow-hidden flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="font-orbitron text-xs sm:text-lg font-black tracking-wide text-white leading-tight truncate">
+              FUTURE BOOST COMPUTER ACADEMY
+            </h1>
+            <span class="px-2 py-0.5 text-[8px] sm:text-[9px] font-black uppercase tracking-wider bg-cyan-950 text-cyan-300 rounded border border-cyan-500/50 shadow-sm shrink-0">
+              CBT EXAMINATION PORTAL
+            </span>
+          </div>
+          <p class="text-[9px] sm:text-[11px] text-slate-300 font-medium leading-tight mt-0.5 truncate">
+            Also Known as Technobright Education Pvt. Ltd. (T.E.P.L.) • ISO 9001:2015 Certified
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Action Pill Buttons -->
+      <div class="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-end flex-wrap">
+        <a href="https://fbca.co.in/" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-cyan-200 hover:text-white bg-slate-900/90 rounded-xl border border-cyan-500/30 transition interactive-btn">
+          <i class="fa-solid fa-globe text-cyan-400 text-xs"></i>
+          <span>fbca.co.in</span>
+        </a>
+
+        <button id="nav-student-btn" onclick="activateStudentPortal()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-orbitron font-bold rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md flex items-center gap-2 interactive-btn">
+          <i class="fa-solid fa-user-graduate"></i>
+          <span>STUDENT ZONE</span>
+        </button>
+
+        <button id="nav-admin-btn" onclick="requestAdminPortalAccess()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-orbitron font-bold rounded-xl text-slate-200 bg-slate-900 border border-slate-700/80 hover:border-amber-500 hover:text-white flex items-center gap-2 relative interactive-btn">
+          <i class="fa-solid fa-lock text-amber-400 text-xs"></i>
+          <span>ADMIN GATEWAY</span>
+          <span id="nav-pending-badge" class="bg-amber-400 text-black text-[10px] px-1.5 py-0.2 rounded-full font-black ml-0.5">0</span>
+        </button>
+
+        <button id="admin-logout-quick-btn" onclick="logoutAdmin()" class="hidden px-2.5 py-1.5 text-xs font-orbitron font-bold bg-rose-600/20 text-rose-300 border border-rose-500/40 rounded-xl transition items-center gap-1 interactive-btn">
+          <i class="fa-solid fa-lock"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER: Viewport Locked 100% Width Container -->
+  <div class="w-full max-w-[100vw] overflow-x-hidden">
+    <div id="platform-main-layout-view" class="w-full max-w-[1600px] mx-auto p-3 sm:p-6 lg:p-8 flex flex-col lg:grid lg:grid-cols-12 gap-5 sm:gap-6 animate-fadeInUp">
+
+      <!-- Left Sidebar (Full Width on mobile, 3 cols on desktop) -->
+      <aside id="main-sidebar" class="w-full lg:col-span-3 space-y-4 sm:space-y-6 min-w-0">
+        <div class="tech-card rounded-2xl p-5 space-y-4 text-center relative overflow-hidden">
+          <div class="group relative z-10">
+            <div class="w-20 h-20 rounded-full overflow-hidden mx-auto mb-2 border-2 border-blue-600 shadow-md">
+              <img id="sidebar-sk-img" src="Sir.jpg" onerror="this.src='https://placehold.co/150x150/0f2942/ffffff?text=SK'" alt="Sanjeev Kumar" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-orbitron text-sm sm:text-base font-bold text-slate-900 mt-1">Sanjeev Kumar</h3>
+            <p class="text-xs text-slate-600 font-medium">Founder & Director</p>
+            <span class="inline-block mt-1 text-[9px] uppercase font-orbitron font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">FBCA & T.E.P.L</span>
+          </div>
+
+          <div class="border-t border-slate-200"></div>
+
+          <div class="group relative z-10">
+            <div class="w-20 h-20 rounded-full overflow-hidden mx-auto mb-2 border-2 border-amber-500 shadow-md">
+              <img id="sidebar-ak-img" src="Ankit.jpg" onerror="this.src='https://placehold.co/150x150/f59e0b/ffffff?text=AK'" alt="Ankit Kumar" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-orbitron text-sm sm:text-base font-bold text-amber-700 mt-1">Ankit Kumar</h3>
+            <p class="text-xs text-slate-600 font-medium">Branch Manager of T.E.P.L</p>
+            <div class="mt-1 font-orbitron text-[10px] font-black text-amber-700 bg-amber-50 py-0.5 px-2.5 rounded-lg border border-amber-300 inline-block">
+              QUIZ CREATOR
+            </div>
+          </div>
+
+          <div class="border-t border-slate-200 pt-2 relative z-10">
+            <div class="italic text-[11px] text-slate-600 font-semibold mb-2">"Learn. Assess. Improve. Succeed."</div>
+            <button onclick="openRulesModal()" class="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl font-orbitron text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm interactive-btn">
+              <i class="fa-solid fa-scroll text-amber-500"></i> EXAMINATION GUIDELINES
+            </button>
+          </div>
+        </div>
+
+        <div class="tech-card rounded-2xl p-4 space-y-2">
+          <button onclick="openCandidateAdmissionScreen()" class="w-full py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-orbitron font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2 interactive-btn">
+  <i class="fa-solid fa-user-plus"></i> CANDIDATE ADMISSION
+</button>
+          <button onclick="scrollToLeaderboard()" class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-orbitron font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 interactive-btn">
+            <i class="fa-solid fa-trophy text-amber-500"></i> LIVE LEADERBOARD
+          </button>
+          <button onclick="requestAdminPortalAccess()" class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-orbitron font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 interactive-btn">
+            <i class="fa-solid fa-shield-halved text-blue-600"></i> ADMIN LOGIN
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Workspace Center Area (Full Width on mobile, 9 cols on desktop) -->
+      <main id="main-content-column" class="w-full lg:col-span-9 space-y-5 min-w-0">
+
+        <!-- Hero Banner -->
+         
+        <div id="main-hero-banner" class="w-full bg-gradient-to-r from-brand-950 via-brand-900 to-brand-950 rounded-2xl p-5 sm:p-7 text-white shadow-xl border border-blue-500/30 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div class="space-y-1.5 max-w-2xl text-center md:text-left">
+            <span class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 font-orbitron text-[10px] font-bold border border-cyan-400/30">
+              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> SECURE ONLINE ASSESSMENT PLATFORM
+            </span>
+            <h1 class="font-orbitron text-lg sm:text-3xl font-black text-white tracking-tight">
+              FBCA ONLINE EXAMINATION PORTAL
+            </h1>
+            <p class="text-xs sm:text-sm text-blue-100/90 leading-relaxed">
+              A secure, cloud-based examination platform for conducting online assessments, managing candidates, and generating instant results.
+            </p>
+          </div>
+          <div class="shrink-0 w-full md:w-auto">
+            <button onclick="openCandidateAdmissionScreen()" class="w-full md:w-auto px-5 py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-orbitron font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center gap-2 interactive-btn">
+              <i class="fa-solid fa-play"></i> START EXAM / REGISTER
+            </button>
+            
+          </div>
+        </div>
+
+        <!-- Quick Metrics -->
+        <div id="main-metric-stats" class="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div class="tech-card p-3.5 sm:p-4 rounded-xl sm:rounded-2xl">
+            <div class="text-[10px] sm:text-[11px] font-orbitron text-slate-500 uppercase font-bold flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span> ACTIVE TESTS
+            </div>
+            <div id="stat-active-tests" class="font-orbitron text-xl sm:text-3xl font-black text-blue-700 mt-1">00</div>
+          </div>
+          <div class="tech-card p-3.5 sm:p-4 rounded-xl sm:rounded-2xl">
+            <div class="text-[10px] sm:text-[11px] font-orbitron text-slate-500 uppercase font-bold flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-slate-500"></span> TOTAL STUDENTS
+            </div>
+            <div id="stat-total-students" class="font-orbitron text-xl sm:text-3xl font-black text-slate-900 mt-1">00</div>
+          </div>
+          <div class="tech-card p-3.5 sm:p-4 rounded-xl sm:rounded-2xl">
+            <div class="text-[10px] sm:text-[11px] font-orbitron text-slate-500 uppercase font-bold flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> BRANCH HUBS
+            </div>
+            <div id="stat-total-branches" class="font-orbitron text-xl sm:text-3xl font-black text-emerald-600 mt-1">03</div>
+          </div>
+          <div class="tech-card p-3.5 sm:p-4 rounded-xl sm:rounded-2xl">
+            <div class="text-[10px] sm:text-[11px] font-orbitron text-slate-500 uppercase font-bold flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyan-500"></span> DATABASE
+            </div>
+            <div class="font-orbitron text-sm sm:text-xl font-black text-cyan-600 mt-1.5">CLOUD CONNECTED</div>
+          </div>
+        </div>
+
+        <!-- STUDENT ZONE CONTAINER -->
+        <div id="student-portal-container" class="w-full space-y-5">
+
+          <!-- Top Toggle Navigation -->
+          <div id="student-auth-tabs-pill" class="flex items-center justify-center p-1 bg-slate-900/80 backdrop-blur-md rounded-2xl max-w-sm mx-auto border border-blue-500/20 shadow-lg">
+            <button id="tab-pill-login" onclick="switchStudentAuthMode('login')" class="flex-1 py-2 px-3 rounded-xl text-xs font-orbitron font-bold transition-all text-white bg-blue-600 shadow-md flex items-center justify-center gap-2 interactive-btn">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>CANDIDATE LOGIN</span>
+            </button>
+            <button id="tab-pill-reg" onclick="switchStudentAuthMode('registration')" class="flex-1 py-2 px-3 rounded-xl text-xs font-orbitron font-bold transition-all text-slate-400 hover:text-white flex items-center justify-center gap-2 interactive-btn">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>REGISTER</span>
+            </button>
+          </div>
+
+          <!-- AUTH VIEWS CONTAINER -->
+          <div id="student-auth-view" class="w-full max-w-2xl mx-auto space-y-4">
+            
+            <!-- 1. LOGIN CARD (100% Solid White Fit) -->
+            <div id="login-panel-card" class="tech-card rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4 sm:space-y-5 w-full">
+              <div class="border-b border-slate-200 pb-3 flex justify-between items-center">
+                <div>
+                  <span class="text-[9px] font-orbitron font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 inline-block">
+                    <i class="fa-solid fa-user-lock"></i> SECURE ACCESS
+                  </span>
+                  <h3 class="font-orbitron text-base sm:text-2xl font-bold text-slate-900 mt-1.5">CANDIDATE LOGIN</h3>
+                  <p class="text-xs text-slate-500">Enter your Roll ID and Password to access your assigned examinations.</p>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg sm:text-xl shrink-0 border border-blue-100">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+              </div>
+
+              <form id="student-login-form" onsubmit="handleStudentLogin(event)" class="space-y-3.5 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-700 uppercase mb-1">Candidate Roll ID</label>
+                  <input type="text" id="login-id" required placeholder="Enter your Roll ID" class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-3 sm:p-3.5 text-blue-700 font-mono font-bold tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition">
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-700 uppercase mb-1">Password</label>
+                  <div class="relative">
+                    <input type="password" id="login-password" required placeholder="Enter password" class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-3 sm:p-3.5 pr-10 text-slate-900 font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition">
+                    <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                      <i class="fa-solid fa-eye text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold rounded-xl shadow-lg transition text-xs uppercase tracking-wider flex items-center justify-center gap-2 interactive-btn">
+                  <i class="fa-solid fa-right-to-bracket"></i>
+                  <span>ENTER ASSESSMENT ZONE</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- 2. REGISTRATION CARD -->
+            <div id="registration-panel-card" class="hidden tech-card rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4 sm:space-y-5 w-full">
+              <div class="border-b border-slate-200 pb-3 flex justify-between items-center">
+                <div>
+                  <span class="text-[9px] font-orbitron font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 inline-block">
+                    <i class="fa-solid fa-id-card"></i> NEW ENROLLMENT
+                  </span>
+                  <h2 class="font-orbitron text-base sm:text-2xl font-bold text-slate-900 mt-1.5">Candidate Registration</h2>
+                  <p class="text-xs text-slate-500">Upload photo and fill details to generate Roll ID.</p>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg sm:text-xl shrink-0 border border-emerald-100">
+                  <i class="fa-solid fa-user-plus"></i>
+                </div>
+              </div>
+
+              <form id="student-reg-form" onsubmit="handleStudentRegistration(event)" class="space-y-3.5 text-xs">
+                <div class="bg-slate-50 border border-slate-300 rounded-xl p-3 flex items-center gap-3">
+                  <div class="w-14 h-14 rounded-lg border-2 border-dashed border-blue-400 bg-white overflow-hidden flex items-center justify-center shrink-0">
+                    <img id="reg-photo-preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                    <i id="reg-photo-placeholder" class="fa-solid fa-camera text-slate-300 text-lg"></i>
+                  </div>
+                  <div class="flex-1 overflow-hidden">
+                    <label class="block font-bold text-slate-700 uppercase text-[10px] mb-1">Passport Photo *</label>
+                    <input type="file" id="reg-photo" accept="image/*" required onchange="handleStudentPhotoSelect(event)" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-orbitron file:font-bold file:bg-blue-600 file:text-white cursor-pointer">
+                    <span class="text-[9px] text-slate-400 mt-0.5 block truncate">JPG, PNG format (Compressed automatically)</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Student Full Name *</label>
+                    <input type="text" id="reg-name" required placeholder="Enter student name" class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-2.5 sm:p-3 text-slate-900 uppercase font-semibold focus:outline-none transition">
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Father's Name *</label>
+                    <input type="text" id="reg-father" required placeholder="Enter father's name" class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-2.5 sm:p-3 text-slate-900 uppercase font-semibold focus:outline-none transition">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Branch *</label>
+                    <select id="reg-branch" required class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-2.5 sm:p-3 text-slate-900 font-semibold focus:outline-none transition">
+                      <option value="">-- Branch --</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Course *</label>
+                    <select id="reg-course" required class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-2.5 sm:p-3 text-slate-900 font-semibold focus:outline-none transition">
+                      <option value="">-- Course --</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Batch *</label>
+                    <select id="reg-batch" required class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-2.5 sm:p-3 text-slate-900 font-semibold focus:outline-none transition">
+                      <option value="">-- Batch --</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Highest Qualification *</label>
+                    <select id="reg-qualification" required class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-2.5 sm:p-3 text-slate-900 font-semibold focus:outline-none transition">
+                      <option value="">-- Choose Qualification --</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Mobile Number (10 Digits) *</label>
+                    <input type="tel" id="reg-mobile" required pattern="[0-9]{10}" placeholder="10-digit number" class="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white rounded-xl p-2.5 sm:p-3 text-slate-900 font-semibold focus:outline-none transition">
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full mt-2 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center gap-2 interactive-btn">
+                  <i class="fa-solid fa-fingerprint"></i>
+                  <span>REGISTER & GENERATE ID</span>
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+          <!-- 3. STUDENT DASHBOARD VIEW -->
+          <div id="student-dashboard-view" class="hidden space-y-5 w-full max-w-5xl mx-auto animate-fadeInUp">
+            <button id="student-streak-button" onclick="openStreakLeaderboard()" class="w-full rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-4 flex items-center justify-between gap-3 text-left shadow-sm interactive-btn"><span class="flex items-center gap-3"><span class="text-3xl">🔥</span><span><strong class="block text-sm text-amber-900">Daily Login Streak</strong><small class="block text-xs text-amber-700">Login every day to keep your streak alive</small></span></span><span class="text-right"><strong id="student-streak-count" class="block text-xl font-black text-orange-600">0</strong><small class="text-[10px] font-bold text-amber-700">DAYS · LEADERBOARD ↗</small></span></button>
+            
+            <!-- BRAND INSTITUTIONAL EXECUTIVE HEADING -->
+            <div class="w-full bg-gradient-to-r from-brand-950 via-slate-900 to-brand-950 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-blue-500/40 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
+              
+              <div class="flex items-center gap-3 relative z-10 text-left shrink-0">
+                <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-blue-500 overflow-hidden shadow-md bg-slate-800">
+                  <img id="dash-sk-img" src="Sir.jpg" onerror="this.src='https://placehold.co/100x100/0f2942/ffffff?text=SK'" alt="Sanjeev Kumar" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <h4 class="font-orbitron font-bold text-xs sm:text-sm text-white">Sanjeev Kumar</h4>
+                  <p class="text-[10px] sm:text-[11px] text-blue-300 font-semibold">Founder & Director</p>
+                  <span class="inline-block mt-0.5 text-[8px] sm:text-[9px] font-orbitron font-bold bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-400/30">FOUNDER & DIRECTOR</span>
+                </div>
+              </div>
+
+              <div class="text-center relative z-10 flex-1 px-2 border-y md:border-y-0 md:border-x border-slate-700/60 py-2.5 md:py-0 w-full">
+                <span class="text-[9px] font-orbitron font-black tracking-widest text-cyan-400 uppercase bg-cyan-950/60 px-2.5 py-0.5 rounded-full border border-cyan-400/30 inline-block mb-1">
+                  ONLINE ASSESSMENT PLATFORM
+                </span>
+                <h2 class="font-orbitron font-black text-base sm:text-2xl text-white tracking-wide uppercase">
+                  FUTURE BOOST TEST PANEL
+                </h2>
+                <h3 class="font-orbitron font-bold text-[11px] sm:text-sm text-amber-400 mt-0.5">
+                  FUTURE BOOST COMPUTER ACADEMY
+                </h3>
+                <p class="text-[9px] text-slate-400 italic mt-0.5">
+                  Also Known As Technobright Education Pvt. Ltd. (T.E.P.L)
+                </p>
+              </div>
+
+              <div class="flex items-center gap-3 relative z-10 text-right shrink-0">
+                <div>
+                  <h4 class="font-orbitron font-bold text-xs sm:text-sm text-amber-400">Ankit Kumar</h4>
+                  <p class="text-[10px] sm:text-[11px] text-slate-300 font-semibold">Host & Branch Manager</p>
+                  <span class="inline-block mt-0.5 text-[8px] sm:text-[9px] font-orbitron font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-400/30">QUIZ & ASSESSMENT COORDINATOR</span>
+                </div>
+                <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-amber-500 overflow-hidden shadow-md bg-slate-800">
+                  <img id="dash-ak-img" src="Ankit.jpg" onerror="this.src='https://placehold.co/100x100/f59e0b/ffffff?text=AK'" alt="Ankit Kumar" class="w-full h-full object-cover">
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Candidate Identity Bar (100% Solid White Fit) -->
+            <div class="tech-card rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-slate-200 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6 w-full">
+              <div class="flex items-center gap-3.5">
+                <div id="dash-avatar-wrapper" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-blue-600 flex items-center justify-center bg-slate-100 shadow-md shrink-0">
+                  <img id="dash-avatar-img" src="" alt="Student" class="w-full h-full object-cover hidden">
+                  <span id="dash-avatar-text" class="font-orbitron font-bold text-blue-700 text-lg sm:text-xl">ST</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 id="dash-student-name" class="font-orbitron text-base sm:text-2xl font-black text-slate-900 tracking-tight">Student Name</h2>
+                    <span class="px-2 py-0.5 text-[9px] font-orbitron font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      APPROVED
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span>Father: <strong id="dash-father-name" class="text-slate-800">--</strong></span>
+                    <span>&bull;</span>
+                    <span>Hub: <strong id="dash-branch" class="text-emerald-700">Patna</strong></span>
+                    <span>&bull;</span>
+                    <span>Course: <strong id="dash-course" class="text-blue-700">--</strong></span>
+                    <span>&bull;</span>
+                    <span>Batch: <strong id="dash-batch" class="text-amber-600">--</strong></span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+                <div class="text-left md:text-right">
+                  <div class="text-[9px] text-slate-400 font-orbitron font-bold uppercase tracking-wider">ROLL ID</div>
+                  <div id="dash-student-id" class="text-xs sm:text-sm font-mono font-black text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 mt-0.5">--</div>
+                </div>
+                <button onclick="logoutStudent()" class="px-3.5 py-2 text-xs font-orbitron font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl border border-rose-200 transition shadow-sm flex items-center gap-1.5 interactive-btn">
+                  <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                  <span>LOGOUT</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Focused Content Tabs -->
+            <div class="flex border-b border-slate-800/20 bg-slate-900/60 backdrop-blur-md p-1 rounded-xl max-w-md mx-auto shadow-md">
+              <button id="student-tab-btn-exams" onclick="switchStudentPanelTab('exams')" class="flex-1 py-2 px-3 rounded-lg text-xs font-orbitron font-bold text-white bg-blue-600 transition shadow-sm flex items-center justify-center gap-2 interactive-btn">
+                <i class="fa-solid fa-laptop-code"></i>
+                <span>EXAMS</span>
+              </button>
+              <button id="student-tab-btn-transcripts" onclick="switchStudentPanelTab('transcripts')" class="flex-1 py-2 px-3 rounded-lg text-xs font-orbitron font-bold text-slate-400 hover:text-white transition flex items-center justify-center gap-2 interactive-btn">
+                <i class="fa-solid fa-certificate"></i>
+                <span>TRANSCRIPTS</span>
+              </button>
+            </div>
+
+            <!-- TAB 1: Assigned Assessments -->
+            <div id="student-subtab-exams" class="space-y-3">
+              <div class="flex items-center justify-between px-1">
+                <h3 class="font-orbitron text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> SCHEDULED ASSESSMENTS
+                </h3>
+                <span id="active-test-count" class="text-xs font-orbitron font-bold text-cyan-300 bg-cyan-950/60 px-2.5 py-0.5 rounded-full border border-cyan-400/30">0 Tests</span>
+              </div>
+              <div id="student-tests-list" class="space-y-3"></div>
+            </div>
+
+            <!-- TAB 2: Historical Transcripts -->
+            <div id="student-subtab-transcripts" class="hidden space-y-3">
+              <div class="px-1">
+                <h3 class="font-orbitron text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-award text-amber-400"></i> OFFICIAL CERTIFICATES & STANDING
+                </h3>
+              </div>
+              <div class="tech-card rounded-2xl overflow-hidden shadow-lg border border-slate-200">
+                <div id="student-results-list" class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto"></div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- LIVE STUDENT LEADERBOARD (100% Solid White Fit - No Horizontal Cut) -->
+        <div id="leaderboard-section-wrapper" class="tech-card rounded-2xl p-4 sm:p-7 space-y-5 w-full overflow-hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-200 pb-4 w-full">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping"></span>
+                <h3 class="font-orbitron text-base sm:text-2xl font-bold text-slate-900 tracking-wide">
+                  LIVE STUDENT RANKINGS
+                </h3>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Real-time candidate score comparison and rankings across batches.</p>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs w-full sm:w-auto">
+              <select id="leaderboard-filter-select" onchange="renderLeaderboardTable()" class="w-full sm:w-auto bg-slate-50 border border-slate-300 text-slate-900 rounded-xl px-3 py-1.5 font-orbitron font-bold text-xs focus:outline-none">
+                <option value="ALL">-- ALL TESTS --</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="w-full grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div class="bg-gradient-to-b from-amber-50 to-white p-3.5 rounded-2xl border border-amber-300 text-center shadow-sm">
+              <div class="text-2xl sm:text-3xl">🥇</div>
+              <div class="font-orbitron text-[10px] font-bold text-amber-800 uppercase mt-0.5">RANK 1</div>
+              <div id="podium-rank1-name" class="font-orbitron text-sm sm:text-base font-black text-slate-900 mt-0.5 truncate">--</div>
+              <div id="podium-rank1-score" class="text-xs text-amber-700 font-mono font-bold mt-0.5">--</div>
+            </div>
+            <div class="bg-gradient-to-b from-slate-100 to-white p-3.5 rounded-2xl border border-slate-300 text-center shadow-sm">
+              <div class="text-2xl sm:text-3xl">🥈</div>
+              <div class="font-orbitron text-[10px] font-bold text-slate-700 uppercase mt-0.5">RANK 2</div>
+              <div id="podium-rank2-name" class="font-orbitron text-sm sm:text-base font-black text-slate-900 mt-0.5 truncate">--</div>
+              <div id="podium-rank2-score" class="text-xs text-slate-600 font-mono font-bold mt-0.5">--</div>
+            </div>
+            <div class="bg-gradient-to-b from-orange-50 to-white p-3.5 rounded-2xl border border-orange-300 text-center shadow-md">
+              <div class="text-2xl sm:text-3xl">🥉</div>
+              <div class="font-orbitron text-[10px] font-bold text-orange-800 uppercase mt-0.5">RANK 3</div>
+              <div id="podium-rank3-name" class="font-orbitron text-sm sm:text-base font-black text-slate-900 mt-0.5 truncate">--</div>
+              <div id="podium-rank3-score" class="text-xs text-orange-700 font-mono font-bold mt-0.5">--</div>
+            </div>
+          </div>
+
+          <!-- Scrollable Table Container (Prevents Entire Screen Stretch) -->
+          <div class="w-full max-w-full overflow-x-auto rounded-xl border border-slate-200 block">
+            <table class="w-full min-w-[620px] text-left text-xs border-collapse">
+              <thead class="bg-slate-100 font-orbitron text-slate-700 uppercase border-b border-slate-200 whitespace-nowrap">
+                <tr>
+                  <th class="p-3">Rank</th>
+                  <th class="p-3">Candidate</th>
+                  <th class="p-3">Roll ID</th>
+                  <th class="p-3">Hub</th>
+                  <th class="p-3">Course / Batch</th>
+                  <th class="p-3">Exam</th>
+                  <th class="p-3">Score</th>
+                  <th class="p-3">Percentage</th>
+                  <th class="p-3 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-tbody" class="divide-y divide-slate-100 font-medium text-slate-700 bg-white whitespace-nowrap"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- CBT Exam View (2-Column Architecture) -->
+  <div id="platform-quiz-interface-view" class="hidden min-h-screen flex-col bg-slate-900 text-white select-none relative z-50 w-full overflow-x-hidden">
+    <header class="header-branding px-3 sm:px-8 py-2.5 border-b border-slate-800 bg-slate-950 flex justify-between items-center gap-2 shrink-0 w-full">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-blue-500 overflow-hidden shrink-0 shadow-md">
+          <img id="quiz-sk-img" src="Sir.jpg" onerror="this.src='https://placehold.co/100x100/0f2942/ffffff?text=SK'" alt="Sanjeev Kumar" class="w-full h-full object-cover">
+        </div>
+        <div class="hidden sm:block text-left">
+          <div class="font-orbitron text-xs font-bold text-blue-400">Sanjeev Kumar</div>
+          <div class="text-[9px] text-slate-400">Founder & Director</div>
+        </div>
+      </div>
+
+      <div class="text-center flex-1 overflow-hidden px-2">
+        <h2 class="font-orbitron text-[9px] sm:text-xs text-blue-400 tracking-widest font-bold truncate">FUTURE BOOST QUIZ LEAGUE</h2>
+        <h1 class="font-orbitron text-xs sm:text-lg font-black text-white tracking-wide truncate">FUTURE BOOST COMPUTER ACADEMY</h1>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="hidden sm:block text-right">
+          <div class="font-orbitron text-xs font-bold text-amber-400">Ankit Kumar</div>
+          <div class="text-[9px] text-slate-400">Branch Manager</div>
+        </div>
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-amber-500 overflow-hidden shrink-0 shadow-md">
+          <img id="quiz-ak-img" src="Ankit.jpg" onerror="this.src='https://placehold.co/100x100/f59e0b/ffffff?text=AK'" alt="Ankit Kumar" class="w-full h-full object-cover">
+        </div>
+      </div>
+    </header>
+
+    <div class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-6 flex flex-col items-start overflow-hidden">
+      
+      <!-- Full Width Question Area -->
+      <main class="w-full flex flex-col justify-between space-y-4 min-w-0">
+        <div class="flex items-center justify-between bg-slate-800/80 border border-slate-700 px-4 py-2 rounded-xl sm:rounded-2xl">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            <span class="font-orbitron text-[11px] sm:text-xs font-bold text-cyan-300 uppercase tracking-wider">SPEED ASSESSMENT</span>
+          </div>
+
+          <div class="flex items-center gap-2.5">
+            <div class="relative w-[44px] h-[44px] sm:w-[50px] sm:h-[50px] flex items-center justify-center cursor-pointer" onclick="reloadCountdownTimerContextValue()">
+              <svg class="w-[44px] h-[44px] sm:w-[50px] sm:h-[50px] -rotate-90">
+                <circle cx="25" cy="25" r="21" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="4"/>
+                <circle id="timer-bar" cx="25" cy="25" r="21" fill="none" stroke="#f59e0b" stroke-width="4" stroke-dasharray="132" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-linear"/>
+              </svg>
+              <div id="timer-text" class="absolute font-orbitron text-sm sm:text-base font-black text-amber-400">15</div>
+            </div>
+            <div class="text-[10px] font-orbitron text-slate-400 font-semibold hidden sm:block">15s Limit</div>
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="w-full bg-slate-800/95 border border-slate-700 rounded-2xl p-5 sm:p-8 shadow-2xl text-left min-h-[120px] flex items-center">
+          <h3 id="quiz-question-text-field" class="font-orbitron text-sm sm:text-xl font-bold text-white leading-relaxed">
+            Question Loading...
+          </h3>
+        </div>
+
+        <!-- 2x2 Options Grid -->
+        <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-3" id="quiz-options-grid-container"></div>
+      </main>
+
+    </div>
+
+    <footer class="px-3 sm:px-8 py-2.5 sm:py-3 bg-slate-950 border-t border-slate-800 flex flex-wrap justify-between items-center gap-2 shrink-0 w-full">
+      <div id="score-status-label" class="font-orbitron text-[11px] sm:text-xs font-bold text-blue-400 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+        Q: 1/1 | Answered: 0
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- New Palette Button (Mobile aur PC dono me dikhega) -->
+        <button id="palette-launcher-btn" type="button" onclick="toggleMobileQuestionPalette(true)" class="px-3 py-2 rounded-xl border border-cyan-500/50 bg-cyan-950/80 text-cyan-300 font-orbitron font-bold text-xs flex items-center gap-1.5 interactive-btn">
+          <i class="fa-solid fa-grip text-xs"></i>
+          <span>PALETTE</span>
+          <span id="palette-launcher-count" class="bg-cyan-400 text-slate-950 text-[9px] px-1.5 py-0.5 rounded-full font-black">0/0</span>
+        </button>
+
+        <button onclick="navigateToPreviousQuestion()" class="px-3 py-2 rounded-xl border border-slate-700 text-white font-orbitron font-bold text-xs hover:bg-slate-800 interactive-btn">
+          PREV
+        </button>
+        <button id="ctrl-pause" onclick="toggleTimerPauseContextState()" class="px-3 py-2 rounded-xl border border-slate-700 text-white font-orbitron font-bold text-xs interactive-btn">
+          PAUSE
+        </button>
+        <button onclick="navigateToNextQuestion()" class="px-4 sm:px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-orbitron font-black text-xs shadow-lg transition interactive-btn">
+          NEXT →
+        </button>
+        <button onclick="triggerHomeRedirectionButton()" class="px-3 py-2 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-300 font-orbitron font-bold text-xs hover:bg-rose-600 hover:text-white interactive-btn">
+          SUBMIT
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MOBILE QUESTION PALETTE POPUP (desktop sidebar remains unchanged) -->
+  
+  <div id="mobile-question-palette-modal" class="hidden fixed inset-0 z-[9500] bg-slate-950/80 backdrop-blur-sm p-4 items-center justify-center" onclick="if(event.target===this)toggleMobileQuestionPalette(false)">
+    <div class="w-full max-w-lg max-h-[80vh] bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-2xl flex flex-col animate-popIn">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-3">
+        <div>
+          <h3 class="text-sm font-orbitron font-black text-white">QUESTION PALETTE</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5">Kisi bhi question par jump karne ke liye number par tap karein</p>
+        </div>
+        <button onclick="toggleMobileQuestionPalette(false)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-lg flex items-center justify-center">×</button>
+      </div>
+      <div id="mobile-question-palette-grid" class="overflow-y-auto grid grid-cols-5 sm:grid-cols-8 gap-2 auto-rows-max pr-1 py-1"></div>
+      <div class="flex justify-between text-[11px] font-orbitron text-slate-400 border-t border-slate-700 pt-3 mt-3">
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-600 inline-block"></span> Answered</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-slate-700 inline-block"></span> Pending</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAILY LOGIN STREAK LEADERBOARD -->
+  <div id="streak-leaderboard-modal" class="hidden fixed inset-0 z-[9998] bg-slate-950/80 backdrop-blur-sm p-4 items-center justify-center" onclick="if(event.target===this)closeStreakLeaderboard()">
+    <div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl">
+      <div class="bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white flex items-center justify-between"><div><h3 class="font-orbitron font-black text-lg">🔥 STREAK LEADERBOARD</h3><p class="text-xs text-white/90">Daily login champions</p></div><button onclick="closeStreakLeaderboard()" class="text-2xl px-2">×</button></div>
+      <div id="streak-leaderboard-list" class="p-4 space-y-2 overflow-y-auto max-h-[60vh]"></div>
+    </div>
+  </div>
+
+  <!-- GRAND RESULT MODAL -->
+  <div id="grand-result-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md hidden overflow-y-auto w-full">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-4 sm:p-8 shadow-2xl relative my-6 text-slate-900 border border-slate-200 animate-popIn">
+      <div class="text-center pb-3 border-b border-slate-200">
+        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-2 border border-amber-200 shadow-inner">
+          🏆
+        </div>
+        <span class="text-[9px] font-orbitron font-black tracking-widest text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 uppercase">
+          EXAM SUBMISSION COMPLETE
+        </span>
+        <h2 id="gr-exam-title" class="font-orbitron font-black text-base sm:text-2xl text-slate-900 mt-1">Exam Assessment</h2>
+        <p class="text-xs text-slate-500">Candidate: <strong id="gr-student-name">--</strong> (<span id="gr-student-id" class="font-mono text-blue-700">--</span>)</p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 my-4 text-center">
+        <div class="p-2.5 sm:p-3 bg-amber-50 rounded-xl sm:rounded-2xl border border-amber-300">
+          <span class="text-[9px] font-orbitron text-amber-800 font-bold uppercase block">LIVE RANK</span>
+          <div id="gr-rank-badge" class="font-orbitron text-sm sm:text-lg font-black text-amber-700 mt-0.5">Rank #1</div>
+          <span id="gr-total-takers" class="text-[9px] text-amber-800 font-medium">Out of 1</span>
+        </div>
+        <div class="p-2.5 sm:p-3 bg-blue-50 rounded-xl sm:rounded-2xl border border-blue-200">
+          <span class="text-[9px] font-orbitron text-blue-700 font-bold uppercase block">SCORE</span>
+          <div id="gr-score" class="font-mono text-sm sm:text-lg font-black text-blue-800 mt-0.5">0 / 0</div>
+          <span class="text-[9px] text-blue-600 font-medium">Marks</span>
+        </div>
+        <div class="p-2.5 sm:p-3 bg-emerald-50 rounded-xl sm:rounded-2xl border border-emerald-200">
+          <span class="text-[9px] font-orbitron text-emerald-700 font-bold uppercase block">PERCENTAGE</span>
+          <div id="gr-percentage" class="font-orbitron text-sm sm:text-lg font-black text-emerald-800 mt-0.5">0%</div>
+          <span id="gr-grade" class="text-[9px] text-emerald-600 font-medium">Status</span>
+        </div>
+        <div class="p-2.5 sm:p-3 bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-200">
+          <span class="text-[9px] font-orbitron text-slate-500 font-bold uppercase block">STATUS</span>
+          <div id="gr-status" class="font-orbitron text-xs sm:text-base font-black text-emerald-600 mt-1">PASSED</div>
+          <span class="text-[9px] text-slate-400 font-medium">Certified</span>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-orbitron text-xs uppercase font-bold text-slate-800 mb-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-list-check text-blue-600"></i> Answers & Explanations Log
+        </h4>
+        <div id="gr-solutions-container" class="space-y-2.5 max-h-56 sm:max-h-64 overflow-y-auto pr-1 border border-slate-100 p-2 rounded-xl bg-slate-50/50"></div>
+      </div>
+
+      <div class="mt-4 sm:mt-6 flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-200">
+        <button onclick="closeGrandResultModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-orbitron font-bold text-xs rounded-xl transition interactive-btn">
+          Dashboard
+        </button>
+        <button id="gr-cert-btn" onclick="openGrandCertificate()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 interactive-btn">
+          <i class="fa-solid fa-award"></i> Certificate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN GATEWAY PORTAL -->
+  <div id="admin-portal" class="hidden max-w-[1600px] mx-auto p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 w-full">
+    <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3 w-full">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <h2 class="font-orbitron text-lg sm:text-2xl font-black text-slate-900">ADMIN CONTROL CENTER</h2>
+        </div>
+        <p class="text-xs text-slate-500">Manage live admissions, batch tests, masters, and branding.</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <button onclick="exportResultsToExcel()" class="flex-1 md:flex-initial px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-orbitron text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm interactive-btn">
+          <i class="fa-solid fa-file-excel"></i> Export Excel
+        </button>
+        <button onclick="logoutAdmin()" class="flex-1 md:flex-initial px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-orbitron text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm interactive-btn">
+          <i class="fa-solid fa-lock"></i> Lock Admin
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin Tabs -->
+    <div class="flex border-b border-slate-200 space-x-3 sm:space-x-6 overflow-x-auto whitespace-nowrap pb-1 w-full">
+      <button onclick="switchAdminTab('approvals')" id="tab-btn-approvals" class="pb-2 text-xs font-orbitron font-bold border-b-2 border-blue-600 text-blue-600 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-user-check"></i>
+        <span>ADMISSIONS</span>
+        <span id="admin-pending-tab-badge" class="bg-amber-400 text-black text-[9px] px-1.5 rounded-full font-black">0</span>
+      </button>
+      <button onclick="switchAdminTab('exams')" id="tab-btn-exams" class="pb-2 text-xs font-orbitron font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-file-excel"></i>
+        <span>EXAMS & LIVE QUIZ</span>
+      </button>
+      <button onclick="switchAdminTab('sounds')" id="tab-btn-sounds" class="pb-2 text-xs font-orbitron font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-volume-high"></i>
+        <span>AUDIO</span>
+      </button>
+      <button onclick="switchAdminTab('masters')" id="tab-btn-masters" class="pb-2 text-xs font-orbitron font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-sitemap"></i>
+        <span>MASTERS</span>
+      </button>
+      <button onclick="switchAdminTab('branding')" id="tab-btn-branding" class="pb-2 text-xs font-orbitron font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-images"></i>
+        <span>BRANDING</span>
+      </button>
+      <button onclick="switchAdminTab('contact')" id="tab-btn-contact" class="pb-2 text-xs font-orbitron font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-address-book"></i>
+        <span>CONTACT</span>
+      </button>
+    </div>
+
+    <!-- Student Approvals Table (With WhatsApp Direct Share) -->
+    <div id="admin-tab-approvals" class="space-y-4 w-full">
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm w-full">
+        <div class="p-3.5 border-b border-slate-100 flex justify-between items-center flex-wrap gap-2.5 bg-slate-50/70 w-full">
+          <div>
+            <h3 class="font-orbitron text-xs sm:text-sm font-bold text-slate-900">Student Admissions Queue</h3>
+            <p class="text-[10px] text-slate-500">Click on student name to view history.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto">
+            <select id="admin-filter-course" onchange="renderAdminStudentsTable()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1 font-semibold text-slate-700 text-xs">
+              <option value="ALL">All Courses</option>
+            </select>
+            <select id="admin-filter-batch" onchange="renderAdminStudentsTable()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1 font-semibold text-slate-700 text-xs">
+              <option value="ALL">All Batches</option>
+            </select>
+            <input type="text" id="admin-search-student" oninput="renderAdminStudentsTable()" placeholder="Search..." class="bg-white border border-slate-300 text-xs px-2.5 py-1 rounded-xl text-slate-900">
+          </div>
+        </div>
+
+        <div class="w-full max-w-full overflow-x-auto block">
+          <table class="w-full min-w-[700px] text-left text-xs border-collapse">
+            <thead class="bg-slate-100 font-orbitron text-slate-700 uppercase border-b border-slate-200 whitespace-nowrap">
+              <tr>
+                <th class="p-3">Photo</th>
+                <th class="p-3">Roll ID</th>
+                <th class="p-3">Candidate</th>
+                <th class="p-3">Hub</th>
+                <th class="p-3">Course / Batch</th>
+                <th class="p-3">Mobile & WhatsApp</th>
+                <th class="p-3">Password</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-students-tbody" class="divide-y divide-slate-100 font-medium whitespace-nowrap"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Create Exams -->
+    <div id="admin-tab-exams" class="hidden grid lg:grid-cols-12 gap-5 w-full">
+      <div class="lg:col-span-6 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3.5">
+        <h3 class="font-orbitron text-sm font-bold text-slate-900">Publish Exam to Multiple Groups</h3>
+        <form id="create-exam-form" onsubmit="handleCreateExam(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Exam Title *</label>
+            <input type="text" id="exam-title" required placeholder="e.g. Combined ADCA & DCA Assessment" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none">
+          </div>
+
+          <div class="p-3 bg-amber-50/80 border border-amber-300 rounded-xl space-y-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="exam-is-live-quiz" onchange="toggleScheduledLiveFields()" class="rounded text-amber-600 w-4 h-4">
+              <span class="font-orbitron font-bold text-xs text-amber-900">MAKE THIS A SCHEDULED LIVE QUIZ</span>
+            </label>
+            <p class="text-[10px] text-amber-800">All students see the same question simultaneously from the scheduled start time.</p>
+            <div id="live-quiz-time-config" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-amber-200">
+              <div>
+                <label class="block font-bold text-slate-700 uppercase text-[10px] mb-1">Live Start Date & Time *</label>
+                <input type="datetime-local" id="exam-live-start-time" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono text-xs">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 uppercase text-[10px] mb-1">Seconds Per Question *</label>
+                <input type="number" id="exam-per-q-seconds" min="5" max="300" value="30" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono text-xs">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Target Courses *</label>
+            <div id="exam-target-courses-wrap" class="flex flex-wrap gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-28 overflow-y-auto"></div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Target Batches *</label>
+            <div id="exam-target-batches-wrap" class="flex flex-wrap gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-28 overflow-y-auto"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Duration (Mins) *</label>
+              <input type="number" id="exam-duration" required min="1" value="15" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Passing (%) *</label>
+              <input type="number" id="exam-passing" required min="1" max="100" value="40" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none">
+            </div>
+          </div>
+
+          <div class="p-3 border-2 border-dashed border-slate-300 rounded-2xl text-center bg-slate-50">
+            <i class="fa-solid fa-file-excel text-2xl text-emerald-600 mb-1"></i>
+            <div class="font-orbitron font-bold text-xs text-slate-900">Upload Spreadsheet (Questions)</div>
+            <p class="text-[9px] text-slate-500">Columns: QuestionText, OptionA, OptionB, OptionC, OptionD, CorrectOption, Marks, Explanation</p>
+            <input type="file" id="exam-excel-file" accept=".xlsx, .xls, .csv" onchange="handleExcelUpload(event)" class="hidden">
+            <div class="flex justify-center gap-2 mt-2">
+              <button type="button" onclick="document.getElementById('exam-excel-file').click()" class="px-3 py-1 bg-blue-600 text-white font-orbitron font-bold rounded-lg text-xs interactive-btn">Browse</button>
+              <button type="button" onclick="downloadSampleExcel()" class="px-3 py-1 bg-white border border-emerald-500 text-emerald-700 rounded-lg font-orbitron font-bold text-xs interactive-btn">Template</button>
+            </div>
+          </div>
+
+          <div id="parsed-status-box" class="hidden p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex justify-between items-center font-bold">
+            <span><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> <strong id="parsed-count">0</strong> Questions ready!</span>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded-xl shadow interactive-btn">
+            PUBLISH TO BATCHES
+          </button>
+        </form>
+      </div>
+
+      <div class="lg:col-span-6 space-y-3">
+        <h3 class="font-orbitron text-sm font-bold text-slate-900">Published Batch Tests</h3>
+        <div id="admin-exams-list" class="space-y-2.5"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Audio Settings -->
+    <div id="admin-tab-sounds" class="hidden max-w-2xl bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4 w-full">
+      <div>
+        <h3 class="font-orbitron text-sm font-bold text-slate-900">Portal Audio Settings</h3>
+        <p class="text-xs text-slate-500">Manage timer, click, warning and submission sounds.</p>
+      </div>
+      <form id="sound-config-form" onsubmit="saveCustomSoundSettings(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Audio Mode</label>
+          <select id="audio-mode-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold">
+            <option value="synthesizer">Browser Synthesizer</option>
+            <option value="custom_mp3">Custom Audio Files</option>
+          </select>
+        </div>
+        <div class="space-y-2 pt-2 border-t border-slate-100">
+          <input type="text" id="snd-tick" placeholder="Timer tick sound URL / path" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono">
+          <input type="text" id="snd-click" placeholder="Option click sound URL / path" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono">
+          <input type="text" id="snd-warn" placeholder="Anti-cheat warning sound URL / path" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono">
+          <input type="text" id="snd-success" placeholder="Submission success sound URL / path" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono">
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="testCurrentAudio()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-orbitron font-bold text-xs interactive-btn">Test Sound</button>
+          <button type="submit" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-orbitron font-bold text-xs uppercase tracking-wider shadow interactive-btn">Save Audio Settings</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tab 3: Dynamic Masters -->
+    <div id="admin-tab-masters" class="hidden grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5">
+        <h4 class="font-orbitron font-bold text-xs uppercase text-slate-900 flex justify-between">
+          <span>Branch Locations</span>
+          <span id="m-count-branch" class="text-blue-600 font-mono">0</span>
+        </h4>
+        <div class="flex gap-1.5">
+          <input type="text" id="new-branch-input" placeholder="New branch..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none">
+          <button onclick="addMasterItem('branches')" class="px-2.5 py-1.5 bg-blue-600 text-white font-orbitron font-bold text-xs rounded-xl interactive-btn">+ Add</button>
+        </div>
+        <div id="branches-list-wrap" class="space-y-1 max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5">
+        <h4 class="font-orbitron font-bold text-xs uppercase text-slate-900 flex justify-between">
+          <span>Courses Master</span>
+          <span id="m-count-course" class="text-emerald-600 font-mono">0</span>
+        </h4>
+        <div class="flex gap-1.5">
+          <input type="text" id="new-course-input" placeholder="New course..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none">
+          <button onclick="addMasterItem('courses')" class="px-2.5 py-1.5 bg-emerald-600 text-white font-orbitron font-bold text-xs rounded-xl interactive-btn">+ Add</button>
+        </div>
+        <div id="courses-list-wrap" class="space-y-1 max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5">
+        <h4 class="font-orbitron font-bold text-xs uppercase text-slate-900 flex justify-between">
+          <span>Batch Master</span>
+          <span id="m-count-batch" class="text-amber-600 font-mono">0</span>
+        </h4>
+        <div class="flex gap-1.5">
+          <input type="text" id="new-batch-input" placeholder="Batch No..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none">
+          <button onclick="addMasterItem('batches')" class="px-2.5 py-1.5 bg-amber-500 text-slate-950 font-orbitron font-bold text-xs rounded-xl interactive-btn">+ Add</button>
+        </div>
+        <div id="batches-list-wrap" class="space-y-1 max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5">
+        <h4 class="font-orbitron font-bold text-xs uppercase text-slate-900 flex justify-between">
+          <span>Qualifications</span>
+          <span id="m-count-qual" class="text-purple-600 font-mono">0</span>
+        </h4>
+        <div class="flex gap-1.5">
+          <input type="text" id="new-qual-input" placeholder="Title..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none">
+          <button onclick="addMasterItem('qualifications')" class="px-2.5 py-1.5 bg-purple-600 text-white font-orbitron font-bold text-xs rounded-xl interactive-btn">+ Add</button>
+        </div>
+        <div id="quals-list-wrap" class="space-y-1 max-h-48 overflow-y-auto"></div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Branding -->
+    <div id="admin-tab-branding" class="hidden grid sm:grid-cols-3 gap-4 sm:gap-6 w-full">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3 text-center">
+        <div class="w-16 h-16 mx-auto rounded-xl border-2 border-dashed border-blue-400 p-1 flex items-center justify-center bg-slate-50">
+          <img id="admin-preview-logo" src="logo.png" onerror="this.src='https://placehold.co/100x100/2563eb/ffffff?text=LOGO';" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h4 class="font-orbitron font-bold text-xs sm:text-sm text-slate-900">Institute Logo</h4>
+          <p class="text-[10px] text-slate-500">Update header & certificate logo.</p>
+        </div>
+        <input type="file" id="upload-logo-file" accept="image/*" onchange="handleBrandingImageUpload(event, 'logo')" class="hidden">
+        <button onclick="document.getElementById('upload-logo-file').click()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-orbitron font-bold text-xs transition interactive-btn">
+          Change Logo
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3 text-center">
+        <div class="w-16 h-16 mx-auto rounded-full border-2 border-blue-500 overflow-hidden shadow-md">
+          <img id="admin-preview-sk" src="Sir.jpg" onerror="this.src='https://placehold.co/100x100/0f2942/ffffff?text=SK';" class="w-full h-full object-cover">
+        </div>
+        <div>
+          <h4 class="font-orbitron font-bold text-xs sm:text-sm text-slate-900">Sanjeev Kumar</h4>
+          <p class="text-[10px] text-slate-500">Update Director photo.</p>
+        </div>
+        <input type="file" id="upload-sk-file" accept="image/*" onchange="handleBrandingImageUpload(event, 'sk')" class="hidden">
+        <button onclick="document.getElementById('upload-sk-file').click()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-orbitron font-bold text-xs transition interactive-btn">
+          Change Photo
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3 text-center">
+        <div class="w-16 h-16 mx-auto rounded-full border-2 border-amber-500 overflow-hidden shadow-md">
+          <img id="admin-preview-ak" src="Ankit.jpg" onerror="this.src='https://placehold.co/100x100/f59e0b/ffffff?text=AK';" class="w-full h-full object-cover">
+        </div>
+        <div>
+          <h4 class="font-orbitron font-bold text-xs sm:text-sm text-slate-900">Ankit Kumar</h4>
+          <p class="text-[10px] text-slate-500">Update Branch Manager photo.</p>
+        </div>
+        <input type="file" id="upload-ak-file" accept="image/*" onchange="handleBrandingImageUpload(event, 'ak')" class="hidden">
+        <button onclick="document.getElementById('upload-ak-file').click()" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-orbitron font-bold text-xs transition interactive-btn">
+          Change Photo
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab 5: Contact -->
+    <div id="admin-tab-contact" class="hidden max-w-2xl bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3 w-full">
+      <h3 class="font-orbitron text-xs sm:text-sm font-bold text-slate-900">Edit Contact & Footer Information</h3>
+      <form id="institute-contact-form" onsubmit="saveInstituteContactSettings(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Campus Address</label>
+          <input type="text" id="set-inst-address" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Support Phone</label>
+            <input type="text" id="set-inst-phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Support Email</label>
+            <input type="email" id="set-inst-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Timings</label>
+            <input type="text" id="set-inst-timing" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Website</label>
+            <input type="text" id="set-inst-website" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none">
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded-xl shadow interactive-btn">
+          SAVE CONTACT SETTINGS
+        </button>
+      </form>
+      <div class="border-t border-slate-200 pt-3 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <h4 class="font-orbitron text-xs font-bold text-slate-900">Student Registration</h4>
+          <span id="registration-status-label" class="text-[10px] font-orbitron font-bold text-emerald-700">OPEN</span>
+        </div>
+        <p class="text-[10px] text-slate-500">Control whether new students can submit registration forms.</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="setStudentRegistrationEnabled(true)" class="py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-orbitron font-bold text-[10px] interactive-btn">ENABLE</button>
+          <button type="button" onclick="setStudentRegistrationEnabled(false)" class="py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-orbitron font-bold text-[10px] interactive-btn">CLOSE</button>
+        </div>
+      </div>
+      <div class="border-t border-slate-200 pt-3 space-y-2">
+        <h4 class="font-orbitron text-xs font-bold text-slate-900">Legacy Test Data Migration</h4>
+        <p class="text-[10px] text-slate-500">Use once only if your old portal saved demo data in shared system_config lists. Export/backup Firestore first.</p>
+        <button type="button" onclick="migrateLegacyTestData()" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-orbitron font-bold text-[10px] interactive-btn">MIGRATE OLD TEST DATA</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL: EDIT EXAM CONFIGURATION -->
+  <div id="edit-exam-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 text-slate-900 shadow-2xl relative my-6">
+      <button onclick="closeEditExamModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="border-b border-slate-100 pb-2.5 mb-3">
+        <span class="text-[10px] font-orbitron font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">EXAM CONFIGURATION</span>
+        <h3 id="edit-modal-exam-title" class="font-orbitron font-bold text-base text-slate-900 mt-1">Edit Exam Targets</h3>
+      </div>
+
+      <form id="edit-exam-form" onsubmit="saveEditedExamConfig(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="edit-exam-id">
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Select Target Courses</label>
+          <div id="edit-exam-courses-wrap" class="flex flex-wrap gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-28 overflow-y-auto"></div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Select Target Batches</label>
+          <div id="edit-exam-batches-wrap" class="flex flex-wrap gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-28 overflow-y-auto"></div>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded-xl shadow interactive-btn">
+          UPDATE ALLOCATION
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: COMPLETE STUDENT 360° PROFILE -->
+  <div id="student-profile-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm hidden overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-7 shadow-2xl relative my-6">
+      <button onclick="closeStudentProfileModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-3.5 border-b border-slate-100 pb-3">
+        <div class="w-14 h-14 rounded-xl overflow-hidden border-2 border-blue-600 shadow-md shrink-0 bg-slate-100">
+          <img id="modal-sp-img" src="" alt="Student" class="w-full h-full object-cover">
+        </div>
+        <div>
+          <span class="text-[9px] font-orbitron font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">STUDENT DOSSIER</span>
+          <h3 id="modal-sp-name" class="font-orbitron font-black text-base sm:text-xl text-slate-900 mt-0.5">Student Full Name</h3>
+          <p class="text-xs text-slate-500">Roll ID: <strong id="modal-sp-id" class="font-mono text-blue-700">--</strong> | Status: <span id="modal-sp-status" class="font-bold text-emerald-600">APPROVED</span></p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-3.5 text-xs">
+        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+          <span class="text-[9px] text-slate-400 uppercase font-bold block">Father</span>
+          <span id="modal-sp-father" class="font-bold text-slate-800 truncate block">--</span>
+        </div>
+        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+          <span class="text-[9px] text-slate-400 uppercase font-bold block">Branch</span>
+          <span id="modal-sp-branch" class="font-bold text-emerald-700 truncate block">--</span>
+        </div>
+        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+          <span class="text-[9px] text-slate-400 uppercase font-bold block">Course / Batch</span>
+          <span id="modal-sp-course-batch" class="font-bold text-slate-800 truncate block">--</span>
+        </div>
+        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+          <span class="text-[9px] text-slate-400 uppercase font-bold block">Mobile</span>
+          <span id="modal-sp-mobile" class="font-bold font-mono text-slate-800 truncate block">--</span>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-orbitron text-xs uppercase font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
+          <i class="fa-solid fa-list-check text-blue-600"></i> Assessment History
+        </h4>
+        <div id="modal-sp-exams-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ENLARGE STUDENT PHOTO IN ADMIN -->
+  <div id="photo-enlarge-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 text-center border border-slate-200 shadow-2xl relative">
+      <button onclick="closePhotoEnlargeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <span class="text-[10px] font-orbitron font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200 inline-block mb-3">
+        PASSPORT IDENTIFICATION
+      </span>
+
+      <div class="w-44 h-52 mx-auto rounded-2xl border-3 border-blue-600 overflow-hidden shadow-lg bg-slate-100 flex items-center justify-center">
+        <img id="enlarged-student-img" src="" alt="Student Identification" class="w-full h-full object-cover">
+      </div>
+
+      <div class="mt-3">
+        <h3 id="enlarged-student-name" class="font-orbitron font-bold text-base text-slate-900">Student Name</h3>
+        <p id="enlarged-student-id" class="text-xs font-mono font-bold text-blue-700 mt-0.5">--</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRATION SUCCESS CREDENTIALS -->
+  <div id="cred-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-7 border border-slate-200 shadow-2xl relative text-center">
+      <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl border border-emerald-200">
+        <i class="fa-solid fa-id-card-clip"></i>
+      </div>
+      <h3 class="font-orbitron text-lg sm:text-xl font-bold text-slate-900">Enrollment Generated!</h3>
+      <p class="text-xs text-slate-500 mt-0.5">Student Roll ID and Password created successfully.</p>
+
+      <div class="my-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5 font-mono text-left text-xs">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
+          <span class="text-slate-500 font-sans font-bold">STUDENT ROLL ID:</span>
+          <span id="modal-student-id" class="text-sm font-bold text-blue-700">--</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500 font-sans font-bold">PASSWORD:</span>
+          <span id="modal-student-pass" class="text-sm font-bold text-slate-900">--</span>
+        </div>
+      </div>
+
+      <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 text-left mb-3">
+        Status is currently <strong>PENDING</strong>. Admin approval ke baad aap exam de sakte hain.
+      </div>
+
+      <button onclick="closeCredModalAndFillLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold rounded-xl text-xs uppercase tracking-wider transition interactive-btn">
+        PROCEED TO LOGIN
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: ADMIN ACCESS PASSWORD -->
+  <div id="admin-auth-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 border border-slate-200 shadow-2xl relative">
+      <button onclick="closeAdminAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center">
+        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl border border-blue-200">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 class="font-orbitron text-base font-bold text-slate-900">Admin Gateway Access</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Sign in with your authorized Firebase admin account.</p>
+      </div>
+
+      <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-3.5 mt-4 text-xs">
+        <div>
+          <label for="admin-email-input" class="block font-bold text-slate-700 uppercase mb-1">Admin Email</label>
+          <input type="email" id="admin-email-input" autocomplete="username" required placeholder="admin@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-semibold focus:outline-none">
+        </div>
+        <div>
+          <label for="admin-pass-input" class="block font-bold text-slate-700 uppercase mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="admin-pass-input" autocomplete="current-password" required placeholder="Enter Firebase password" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pr-10 text-slate-900 font-mono font-bold tracking-wider focus:outline-none">
+            <button type="button" onclick="togglePasswordVisibility('admin-pass-input', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400">
+              <i class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+        <div id="admin-auth-error" role="alert" aria-live="polite" class="hidden p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-bold">
+          Sign-in failed. Check your credentials and admin access.
+        </div>
+        <button id="admin-login-submit" type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold rounded-xl text-xs uppercase tracking-wider transition interactive-btn">
+          SIGN IN SECURELY
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: OFFICIAL CERTIFICATE -->
+  <div id="certificate-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm hidden overflow-y-auto">
+    <div class="bg-white text-slate-900 rounded-3xl max-w-2xl w-full p-5 shadow-2xl relative my-6">
+      <div class="flex justify-between items-center pb-3 mb-3 border-b border-slate-200 print:hidden">
+        <button onclick="window.print()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-orbitron font-bold rounded-xl text-xs flex items-center gap-1.5 interactive-btn">
+          <i class="fa-solid fa-print"></i> PRINT / PDF
+        </button>
+        <button onclick="closeCertificateModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="printable-certificate-card" class="border-6 sm:border-8 border-double border-slate-900 p-4 sm:p-6 rounded-2xl bg-white text-center">
+        <div class="text-[9px] uppercase font-black text-blue-700 font-orbitron">ISO 9001:2015 CERTIFIED INSTITUTION</div>
+        <h2 class="text-lg sm:text-2xl font-black text-slate-950 font-cinzel mt-1">FUTURE BOOST COMPUTER ACADEMY & T.E.P.L</h2>
+        <div class="w-16 h-1 bg-amber-400 mx-auto my-1.5"></div>
+        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mt-3">This is to certify that</p>
+        <h3 id="cert-student-name" class="text-base sm:text-xl font-black text-blue-900 font-cinzel mt-0.5">--</h3>
+        <p class="text-xs text-slate-700 mt-0.5">
+          Son/Daughter of <strong id="cert-father-name">--</strong> | Roll No: <strong id="cert-student-id" class="font-mono">--</strong>
+        </p>
+        <div class="inline-block mt-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-xl text-xs font-black text-blue-900 font-orbitron" id="cert-course-name">
+          --
+        </div>
+        <div class="grid grid-cols-4 gap-2 text-center p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs my-4">
+          <div><span class="text-[9px] text-slate-500 uppercase font-bold">Batch</span><div id="cert-batch-no" class="font-black text-slate-900 mt-0.5">--</div></div>
+          <div><span class="text-[9px] text-slate-500 uppercase font-bold">Marks</span><div id="cert-score-marks" class="font-black text-slate-900 mt-0.5">--</div></div>
+          <div><span class="text-[9px] text-slate-500 uppercase font-bold">Percentage</span><div id="cert-percentage" class="font-black text-blue-700 mt-0.5">--</div></div>
+          <div><span class="text-[9px] text-slate-500 uppercase font-bold">Grade</span><div id="cert-grade" class="font-black text-emerald-600 mt-0.5">--</div></div>
+        </div>
+        <div class="pt-3 border-t border-slate-300 grid grid-cols-3 items-end text-center">
+          <div class="text-[9px] font-bold text-slate-700">Sanjeev Kumar<br><span class="text-slate-500 font-normal">Director</span></div>
+          <div class="flex flex-col items-center justify-center">
+            <div id="cert-qr-code" class="p-1 bg-white border border-slate-300 rounded-lg"></div>
+            <span class="text-[8px] text-slate-400 font-mono mt-0.5" id="cert-issue-date">Date: --</span>
+          </div>
+          <div class="text-[9px] font-bold text-slate-700">Ankit Kumar<br><span class="text-slate-500 font-normal">Branch Manager</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: OFFICIAL RULES -->
+  <div id="rules-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 border border-slate-200 shadow-2xl relative text-xs">
+      <button onclick="closeRulesModal()" class="absolute top-4 right-4 text-slate-400 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 class="text-base font-orbitron font-black text-slate-900 text-center mb-3">OFFICIAL QUIZ RULES</h3>
+      <div class="space-y-2 font-semibold text-slate-700">
+        <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">1. Click option A, B, C, D directly to select your answer. It will highlight in green.</div>
+        <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">2. 15 seconds per question speed limit.</div>
+        <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">3. Time over = automatically moves to next question.</div>
+        <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">4. Tab switching triggers security anti-cheat strike!</div>
+      </div>
+      <button onclick="closeRulesModal()" class="w-full mt-3.5 py-2.5 bg-blue-600 text-white font-orbitron font-bold rounded-xl interactive-btn">I UNDERSTAND</button>
+    </div>
+  </div>
+
+  <!-- DYNAMIC CONTACT US & ANTI-COPY INSTITUTIONAL FOOTER -->
+  <footer class="mt-10 border-t border-slate-800 bg-brand-950/95 text-slate-400 text-xs py-8 relative z-30 w-full overflow-hidden">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 grid md:grid-cols-4 gap-6 w-full">
+      
+      <div class="md:col-span-2 space-y-2.5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-white p-1 border border-cyan-400/40 flex items-center justify-center shrink-0">
+            <img id="footer-inst-logo" src="logo.png" onerror="this.src='https://placehold.co/100x100/2563eb/ffffff?text=FBCA';" alt="Logo" class="w-full h-full object-contain">
+          </div>
+          <div>
+            <h4 class="font-orbitron font-bold text-xs sm:text-sm text-white">FUTURE BOOST COMPUTER ACADEMY</h4>
+            <p class="text-[9px] text-cyan-400 font-medium">Technobright Education Pvt. Ltd. (T.E.P.L) &bull; ISO 9001:2015</p>
+          </div>
+        </div>
+        <p class="text-[10px] sm:text-[11px] text-slate-400 leading-relaxed pr-2">
+          Empowering technology enthusiasts with certified computer education, professional accounting, advanced programming, and modern automated examination engines.
+        </p>
+
+        <div class="p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-[9px] text-slate-400 leading-snug">
+          <strong class="text-amber-400 font-orbitron uppercase"><i class="fa-solid fa-shield-halved mr-1"></i> Proprietary Notice & Legal Protection:</strong><br>
+          All layout designs, CBT engines, question banks, and codebase are the proprietary property of <strong>Future Boost Computer Academy & Technobright Education Pvt. Ltd.</strong> Unauthorized copying, duplication, or reproduction of this portal is strictly prohibited under the Indian Copyright Act, 1957.
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="font-orbitron font-bold text-xs uppercase tracking-wider text-white border-b border-slate-800 pb-1">
+          <i class="fa-solid fa-headset text-blue-400 mr-1"></i> CONTACT US
+        </h4>
+        <div class="space-y-1.5 text-[10px] sm:text-[11px]">
+          <p class="flex items-start gap-1.5">
+            <i class="fa-solid fa-location-dot text-cyan-400 mt-0.5"></i>
+            <span id="footer-address">Patna Main Hub, Bihar, India</span>
+          </p>
+          <p class="flex items-center gap-1.5">
+            <i class="fa-solid fa-phone text-emerald-400"></i>
+            <span id="footer-phone">+91 98765 43210</span>
+          </p>
+          <p class="flex items-center gap-1.5">
+            <i class="fa-solid fa-envelope text-blue-400"></i>
+            <span id="footer-email">support@fbca.co.in</span>
+          </p>
+          <p class="flex items-center gap-1.5">
+            <i class="fa-solid fa-clock text-amber-400"></i>
+            <span id="footer-timing">Mon - Sat: 08:00 AM - 07:00 PM</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="font-orbitron font-bold text-xs uppercase tracking-wider text-white border-b border-slate-800 pb-1">
+          <i class="fa-solid fa-certificate text-amber-400 mr-1"></i> ACCREDITATION
+        </h4>
+        <div class="space-y-1 text-[10px] sm:text-[11px]">
+          <div>&bull; ISO 9001:2015 Certified</div>
+          <div>&bull; MCA Recognized</div>
+          <div>&bull; Encrypted Result Transcripts</div>
+        </div>
+        <div class="pt-1.5">
+          <a id="footer-website-link" href="https://fbca.co.in/" target="_blank" class="inline-flex items-center gap-1 text-xs text-cyan-300 hover:text-white font-semibold underline underline-offset-4 transition">
+            fbca.co.in <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 mt-6 pt-3 border-t border-slate-900 text-center text-[9px] text-slate-500">
+      &copy; 2026 Future Boost Computer Academy & Technobright Education Pvt. Ltd. (T.E.P.L). All Rights Reserved.
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT CONTROLLER LOGIC & FIREBASE SYNC -->
+  <script src="script.js"></script>
+</body>
+</html>

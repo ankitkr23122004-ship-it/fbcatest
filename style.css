@@ -1,0 +1,125 @@
+*, *::before, *::after {
+      box-sizing: border-box !important;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    input, textarea, select {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+
+    html, body {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #070d19;
+      color: #0f172a;
+      min-height: 100vh;
+      letter-spacing: -0.01em;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 85% 25%, rgba(6, 182, 212, 0.14) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(30, 58, 138, 0.15) 0%, transparent 50%),
+        linear-gradient(rgba(7, 13, 25, 0.90), rgba(7, 13, 25, 0.95)),
+        url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      z-index: -2;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.65;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .font-orbitron {
+      font-family: 'Outfit', 'Poppins', sans-serif !important;
+      letter-spacing: -0.025em;
+    }
+
+    /* Fixed Full-Width Solid White Card */
+    .tech-card {
+      background-color: #ffffff !important;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 20, 50, 0.12);
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .interactive-btn {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .interactive-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Option Card Styling with Green Active Highlight on Tick */
+    .cbt-option-card {
+      background-color: #ffffff !important;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 600;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .cbt-option-card:hover {
+      border-color: #10b981;
+      background-color: #f0fdf4 !important;
+    }
+    .cbt-option-card.selected {
+      background-color: #ecfdf5 !important;
+      border-color: #10b981 !important;
+      color: #065f46 !important;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+    }
+    .cbt-option-card.selected .option-badge {
+      background-color: #10b981 !important;
+      color: #ffffff !important;
+    }
+
+    .animate-fadeInUp {
+      animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-popIn {
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printable-certificate-card, #printable-certificate-card * { visibility: visible; }
+      #printable-certificate-card { position: absolute; left: 0; top: 0; width: 100%; margin: 0; }
+    }
