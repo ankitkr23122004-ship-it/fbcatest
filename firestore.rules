@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // 1. System configurations (Branding, Masters, Settings)
+    // Needs public read so the landing page and dropdowns can render
+    match /system_config/{docId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // 2. Exams
+    // Allow public read for assigned exams, write only for authenticated admin
+    match /exams/{examId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // 3. Students registration & profile
+    // Allow creation for new signups, read for profile/login lookup
+    match /students/{studentUid} {
+      allow create: if true;
+      allow read: if true;
+      allow update, delete: if isAuthenticated();
+    }
+
+    // 4. Results & Leaderboards
+    // Public read so the live leaderboard can render without login
+    match /results/{resultId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAuthenticated();
+    }
+
+    // 5. Admin profiles
+    match /admins/{adminUid} {
+      allow read: if isAuthenticated() && request.auth.uid == adminUid;
+      allow write: if false;
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Do not deploy to public production until you complete PRE_DEPLOY_CHECKLIST.md. The original design is preserved and the main portal flows have been migrated to callable Cloud Functions, but Firebase App Check enforcement and end-to-end emulator/browser tests remain outstanding. Back up Firestore before running the legacy migration.
