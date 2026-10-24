@@ -2186,4 +2186,12 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     document.getElementById('welcome-readiness-modal').classList.remove('hidden');
   }, 350);
+  // Register Service Worker for PWA (Relative Path)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+      .catch(err => console.warn('Service Worker registration failed:', err));
+  });
+}
 });
