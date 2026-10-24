@@ -1,20 +1,25 @@
 {
   "name": "FBCA Online Examination Portal",
   "short_name": "FBCA Exam",
-  "start_url": "index.html",
+  "description": "Secure cloud-based examination platform for conducting online assessments, managing candidates, and generating instant results for FBCA.",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0b1528",
   "theme_color": "#0b1528",
   "icons": [
     {
       "src": "logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
