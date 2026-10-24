@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" class="overflow-x-hidden">
 <head>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b1528">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>FBCA ONLINE EXAMINATION PORTAL</title>
@@ -1403,6 +1405,11 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 mt-6 pt-3 border-t border-slate-900 text-center text-[9px] text-slate-500">
       &copy; 2026 Future Boost Computer Academy & Technobright Education Pvt. Ltd. (T.E.P.L). All Rights Reserved.
     </div>
+    <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
   </footer>
 
   <!-- JAVASCRIPT CONTROLLER LOGIC & FIREBASE SYNC -->
